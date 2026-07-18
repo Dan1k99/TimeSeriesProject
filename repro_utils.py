@@ -313,6 +313,7 @@ def run_experiment_pipeline(df_raw, centered_vals, alpha, beta, model_type, mode
     np.random.seed(42)
     
     N_pixels, N_dates = df_raw.shape
+    print(f"Training {model_type} (leak_free={leak_free}) on {N_pixels} pixels across {N_dates} dates...")
     
     # Create prediction DataFrame
     df_pred = pd.DataFrame(1, index=df_raw.index, columns=df_raw.columns)
@@ -322,6 +323,8 @@ def run_experiment_pipeline(df_raw, centered_vals, alpha, beta, model_type, mode
     if leak_free:
         # Fit classifier for each date
         for j in range(N_dates):
+            if j % 20 == 0:
+                print(f"  -> Training step {j}/{N_dates}...")
             # Envelope filtering: pool historical centered values up to date j
             hist_vals = centered_vals[:, :j+1].flatten()
             hist_vals = hist_vals[~np.isnan(hist_vals)]

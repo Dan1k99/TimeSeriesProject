@@ -14,7 +14,7 @@ def main():
     alpha_if = 1.0
     beta_if = None
     model_type_if = 'IsolationForest'
-    n_estimators_list = [20, 40, 60, 80, 100]
+    n_estimators_list = [20, 40, 60, 80]
     
     for leak_free in [False, True]:
         print(f"\n--- Running Isolation Forest (leak_free={leak_free}) ---")
@@ -23,12 +23,12 @@ def main():
             repro_utils.log_experiment_to_mlflow(
                 dataset_name, band_name, alpha_if, beta_if, model_type_if, model_params, leak_free
             )
-            
+                
     # 2. Sweep One-Class SVM parameters
     alpha_oc = 0.5
     beta_oc = 0.005
     model_type_oc = 'OneClassSVM'
-    nu_list = [0.025, 0.05, 0.1]
+    nu_list = [0.025, 0.1]
     
     for leak_free in [False, True]:
         print(f"\n--- Running One-Class SVM (leak_free={leak_free}) ---")
