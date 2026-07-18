@@ -401,6 +401,7 @@ def run_experiment_pipeline(df_raw, centered_vals, alpha, beta, model_type, mode
             dataind = np.random.choice(len(train_data), size=size_opt, replace=False)
             train_data = train_data[dataind]
             
+        print(f"  Fitting {model_type} on {len(train_data)} training samples...")
         if model_type == 'IsolationForest':
             from sklearn.ensemble import IsolationForest
             clf = IsolationForest(
@@ -416,8 +417,11 @@ def run_experiment_pipeline(df_raw, centered_vals, alpha, beta, model_type, mode
                 gamma=model_params.get('gamma', 'auto')
             ).fit(train_data.reshape(-1, 1))
             
+        print(f"  Model fitted. Running predictions on {N_dates} dates...")
         # Predict on each column
         for j in range(N_dates):
+            if j % 20 == 0:
+                print(f"  -> Predicting step {j}/{N_dates}...")
             current_vals = centered_vals[:, j]
             valid_idx = ~np.isnan(current_vals)
             if np.sum(valid_idx) > 0:

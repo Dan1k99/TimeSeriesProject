@@ -90,7 +90,7 @@ def histo_gera(df1, df2, year):
 
 # %% Cell
 import os
-path = "../../../qgis/Altamira/Area Menor/V2/"
+path = "./qgis/Altamira/Area Menor/V2/" if os.path.exists("./qgis/Altamira/Area Menor/V2/") else "../../../qgis/Altamira/Area Menor/V2/"
 inter_anos = []
 dict_shp_path = {}
 for x in os.listdir(path):

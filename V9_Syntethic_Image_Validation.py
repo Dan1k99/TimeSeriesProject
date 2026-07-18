@@ -14,7 +14,9 @@ import matplotlib.pyplot as plt
 ee.Initialize()
 
 # %% Cell
-validation = rasterio.open('../../../idl/Default/simulation2.tif')
+import os
+val_path = './simulation2.tif' if os.path.exists('./simulation2.tif') else '../../../idl/Default/simulation2.tif'
+validation = rasterio.open(val_path)
 show(validation.read(4))
 
 # %% Cell

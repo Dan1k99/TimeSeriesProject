@@ -249,6 +249,9 @@ def save_tiff_fromdf(df,bands,dummy,path_out):
     target = osr.SpatialReference()
     target.ImportFromEPSG(4326)
     
+    import os
+    if os.path.dirname(path_out):
+        os.makedirs(os.path.dirname(path_out), exist_ok=True)
     driver = gdal.GetDriverByName('GTiff')
     outDs = driver.Create(path_out,ncols,nrows,nbands,gdal.GDT_Float32)
     outDs.SetGeoTransform(transform)
@@ -500,6 +503,9 @@ def save_tiff_fromdf(df,bands,dummy,path_out):
     target = osr.SpatialReference()
     target.ImportFromEPSG(4326)
     
+    import os
+    if os.path.dirname(path_out):
+        os.makedirs(os.path.dirname(path_out), exist_ok=True)
     driver = gdal.GetDriverByName('GTiff')
     outDs = driver.Create(path_out,ncols,nrows,nbands,gdal.GDT_Float32)
     outDs.SetGeoTransform(transform)

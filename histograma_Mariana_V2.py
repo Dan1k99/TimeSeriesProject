@@ -173,8 +173,8 @@ def histo_gera3(df1, df2, year):
     return 
 
 # %% Cell
-bru_shp_path = "../../../qgis/Barragens/Mariana/v2/RatroLamaMari.shp"
 import os
+bru_shp_path = "./qgis/Barragens/Mariana/v2/RatroLamaMari.shp" if os.path.exists("./qgis/Barragens/Mariana/v2/RatroLamaMari.shp") else "../../../qgis/Barragens/Mariana/v2/RatroLamaMari.shp"
 path = "../../Mariana/Tiff/V4_Out_22/"
 inter_anos = []
 dict_if_path = {}
@@ -201,7 +201,7 @@ for x in os.listdir(path):
 dict_ocsvm_path
 
 # %% Cell
-bru_shp_path_no = "../../../qgis/Barragens/Mariana/v2/unchangedareas_mari.shp"
+bru_shp_path_no = "./qgis/Barragens/Mariana/v2/unchangedareas_mari.shp" if os.path.exists("./qgis/Barragens/Mariana/v2/unchangedareas_mari.shp") else "../../../qgis/Barragens/Mariana/v2/unchangedareas_mari.shp"
 dicionario_labels = {}
 dt_dict_oc = {}
 
