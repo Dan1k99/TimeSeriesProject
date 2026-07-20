@@ -17,7 +17,7 @@ if os.path.exists(PROJ_PATH):
 
 def init_ee():
     if not ee.data.is_initialized():
-        ee.Initialize()
+        ee.Initialize(project='timeseriesproject-503021')
 
 def get_dataset_config(dataset_name, band_name):
     # Configurations for the three paper experiments
