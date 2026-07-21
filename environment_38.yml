@@ -232,4 +232,3 @@ dependencies:
       - werkzeug==3.0.6
       - wrapt==2.0.1
       - zipp==3.20.2
-prefix: C:\Users\Arkady\miniconda3\envs\dynaland_env
