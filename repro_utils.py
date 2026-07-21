@@ -90,7 +90,16 @@ def load_raw_data(dataset_name, band_name):
     cache_file = f"data_{dataset_name}_{band_name}.parquet"
     if os.path.exists(cache_file):
         print(f"Loading cached dataset from {cache_file}...")
-        df = pd.read_parquet(cache_file)
+        try:
+            df = pd.read_parquet(cache_file)
+        except Exception:
+            print("Applying PyArrow datetime fix for older pandas version...")
+            import pyarrow.parquet as pq
+            table = pq.read_table(cache_file)
+            table = table.replace_schema_metadata()
+            df = table.to_pandas()
+            if 'Latitude' in df.columns and 'Longitude' in df.columns:
+                df.set_index(['Latitude', 'Longitude'], inplace=True)
         return df
 
     print(f"Cache file {cache_file} not found. Querying Earth Engine (this may take a few minutes)...")
