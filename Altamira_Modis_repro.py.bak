@@ -25,18 +25,18 @@ def main():
             )
                 
     # 2. Sweep One-Class SVM parameters
-    # alpha_oc = 0.5
-    # beta_oc = 0.005
-    # model_type_oc = 'OneClassSVM'
-    # nu_list = [0.025, 0.1]
+    alpha_oc = 0.5
+    beta_oc = 0.005
+    model_type_oc = 'OneClassSVM'
+    nu_list = [0.025, 0.1]
     
-    # for leak_free in [False, True]:
-        # print(f"\n--- Running One-Class SVM (leak_free={leak_free}) ---")
-        # for nu in nu_list:
-            # model_params = {'nu': nu, 'kernel': 'rbf', 'gamma': 'auto'}
-            # repro_utils.log_experiment_to_mlflow(
-                # dataset_name, band_name, alpha_oc, beta_oc, model_type_oc, model_params, leak_free
-            # )
+    for leak_free in [False, True]:
+        print(f"\n--- Running One-Class SVM (leak_free={leak_free}) ---")
+        for nu in nu_list:
+            model_params = {'nu': nu, 'kernel': 'rbf', 'gamma': 'auto'}
+            repro_utils.log_experiment_to_mlflow(
+                dataset_name, band_name, alpha_oc, beta_oc, model_type_oc, model_params, leak_free
+            )
             
     print("\nAll Altamira MODIS experiments logged successfully to MLflow!")
 
