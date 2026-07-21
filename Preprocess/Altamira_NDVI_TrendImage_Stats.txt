@@ -1,7 +1,0 @@
-Dataset: Altamira
-Band: ndvi
-Trend Image Mean: 0.801446
-Trend Image Std Dev: 0.085144
-Trend Image Min: 0.345950
-Trend Image Max: 0.889150
-Trend Image Median: 0.844350

@@ -1,7 +1,0 @@
-Dataset: Mariana
-Band: gvmi
-Trend Image Mean: 0.570578
-Trend Image Std Dev: 0.193305
-Trend Image Min: 0.104174
-Trend Image Max: 0.924049
-Trend Image Median: 0.643361

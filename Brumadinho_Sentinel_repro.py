@@ -27,18 +27,18 @@ def main():
                 )
                 
         # 2. Sweep One-Class SVM parameters
-        alpha_oc = 1.0
-        beta_oc = 0.01  # baseline beta in Brumadinho
-        model_type_oc = 'OneClassSVM'
-        nu_list = [0.001, 0.005, 0.01, 0.05, 0.1]
+        # alpha_oc = 1.0
+        # beta_oc = 0.01  # baseline beta in Brumadinho
+        # model_type_oc = 'OneClassSVM'
+        # nu_list = [0.001, 0.005, 0.01, 0.05, 0.1]
         
-        for leak_free in [False, True]:
-            print(f"\n--- Running One-Class SVM (leak_free={leak_free}) ---")
-            for nu in nu_list:
-                model_params = {'nu': nu, 'kernel': 'rbf', 'gamma': 'auto'}
-                repro_utils.log_experiment_to_mlflow(
-                    dataset_name, band_name, alpha_oc, beta_oc, model_type_oc, model_params, leak_free
-                )
+        # for leak_free in [False, True]:
+        #     print(f"\n--- Running One-Class SVM (leak_free={leak_free}) ---")
+        #     for nu in nu_list:
+        #         model_params = {'nu': nu, 'kernel': 'rbf', 'gamma': 'auto'}
+        #         repro_utils.log_experiment_to_mlflow(
+        #             dataset_name, band_name, alpha_oc, beta_oc, model_type_oc, model_params, leak_free
+        #         )
                 
     print(f"\nAll {dataset_name} Sentinel-2 experiments logged successfully to MLflow!")
 
