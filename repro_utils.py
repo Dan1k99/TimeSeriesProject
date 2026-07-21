@@ -155,9 +155,21 @@ def load_raw_data(dataset_name, band_name):
     lats = np.array(coords['latitude']).astype(float)
     lons = np.array(coords['longitude']).astype(float)
     
-    # Build raw dictionary
+    # Build raw dictionary with partial checkpoint resume support
+    checkpoint_file = f"data_{dataset_name}_{band_name}_checkpoint.parquet"
     data_dict = {}
     
+    if os.path.exists(checkpoint_file):
+        try:
+            chk_df = pd.read_parquet(checkpoint_file)
+            print(f"Found partial download checkpoint ({len(chk_df.columns) - 2} dates completed). Resuming download...")
+            for col in chk_df.columns:
+                if col not in ['Latitude', 'Longitude']:
+                    data_dict[pd.to_datetime(col)] = chk_df[col].values
+        except Exception as e:
+            print("Checkpoint unreadable, starting fresh download:", e)
+            data_dict = {}
+
     # For Altamira we will track SummaryQA as well
     if dataset_name == 'Altamira':
         qa_values = []
@@ -173,7 +185,8 @@ def load_raw_data(dataset_name, band_name):
             qa_values.append(np.array(qa_info['SummaryQA']).astype(float))
     
     print(f"Downloading {band_name} bands...")
-    for j in range(size):
+    start_idx = len(data_dict)
+    for j in range(start_idx, size):
         date_str = dates[j].strftime('%Y-%m-%d')
         print(f"  Downloading image {j+1}/{size} for date {date_str}...")
         img = ee.Image(-99999).rename(band_name).blend(ee.Image(img_list.get(j)))
@@ -184,14 +197,21 @@ def load_raw_data(dataset_name, band_name):
             bestEffort=True
         ).getInfo()
         data_dict[dates[j]] = np.array(info[band_name]).astype(float)
+        
+        # Save checkpoint to disk every 5 images so stopping midway preserves progress
+        if (j + 1) % 5 == 0 or (j + 1) == size:
+            chk_df = pd.DataFrame({str(k): v for k, v in data_dict.items()})
+            chk_df['Latitude'] = lats
+            chk_df['Longitude'] = lons
+            chk_df.to_parquet(checkpoint_file)
     
-    df = pd.DataFrame(data_dict)
+    df = pd.DataFrame({str(k): v for k, v in data_dict.items()})
     df['Latitude'] = lats
     df['Longitude'] = lons
     
     if dataset_name == 'Altamira':
         # Add SummaryQA info
-        qa_df = pd.DataFrame(dict(zip(dates, qa_values)))
+        qa_df = pd.DataFrame(dict(zip([str(d) for d in dates], qa_values)))
         qa_df['Latitude'] = lats
         qa_df['Longitude'] = lons
         qa_df.set_index(['Latitude', 'Longitude'], inplace=True)
@@ -200,6 +220,14 @@ def load_raw_data(dataset_name, band_name):
     df.set_index(['Latitude', 'Longitude'], inplace=True)
     df.to_parquet(cache_file)
     print(f"Successfully cached data to {cache_file}!")
+    
+    # Cleanup temporary checkpoint file
+    if os.path.exists(checkpoint_file):
+        try:
+            os.remove(checkpoint_file)
+        except Exception:
+            pass
+            
     return df
 
 def calculate_metrics(df_pred):
