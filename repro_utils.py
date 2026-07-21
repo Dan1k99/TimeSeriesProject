@@ -17,7 +17,18 @@ if os.path.exists(PROJ_PATH):
 
 def init_ee():
     if not ee.data.is_initialized():
-        ee.Initialize(project='timeseriesproject-503021')
+        PROJECT_IDS = ['889258893131', 'timeseriesproject-503021']
+        for proj in PROJECT_IDS:
+            try:
+                ee.Initialize(project=proj)
+                return
+            except Exception:
+                continue
+        try:
+            ee.Initialize()
+        except Exception:
+            ee.Authenticate()
+            ee.Initialize()
 
 def get_dataset_config(dataset_name, band_name):
     # Configurations for the three paper experiments
