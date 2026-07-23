@@ -36,6 +36,9 @@ def train_lstm_autoencoder(dataset_name='Altamira', num_epochs=10, batch_size=51
     optimizer = optim.Adam(model.parameters(), lr=lr)
     
     # Setup MLflow
+    import os
+    if os.environ.get("MLFLOW_TRACKING_URI"):
+        mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
     mlflow.set_experiment(f"DynaLand_{dataset_name}_DeepLearning")
     with mlflow.start_run(run_name="LSTM_Autoencoder_Phase3"):
         mlflow.log_params({
