@@ -386,17 +386,17 @@ def fit_model(model_type, model_params, train_data):
     if use_gpu:
         try:
             import cuml
-            if model_type == 'IsolationForest':
-                clf = cuml.ensemble.IsolationForest(
-                    n_estimators=model_params.get('n_estimators', 40),
-                    random_state=42
-                ).fit(train_data_2d)
-                return clf
-            elif model_type == 'OneClassSVM':
+            if model_type == 'OneClassSVM' and hasattr(cuml.svm, 'OneClassSVM'):
                 clf = cuml.svm.OneClassSVM(
                     nu=model_params.get('nu', 0.05),
                     kernel=model_params.get('kernel', 'rbf'),
                     gamma=model_params.get('gamma', 'auto')
+                ).fit(train_data_2d)
+                return clf
+            elif model_type == 'IsolationForest' and hasattr(getattr(cuml, 'ensemble', None), 'IsolationForest'):
+                clf = cuml.ensemble.IsolationForest(
+                    n_estimators=model_params.get('n_estimators', 40),
+                    random_state=42
                 ).fit(train_data_2d)
                 return clf
         except Exception as e:
