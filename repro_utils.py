@@ -355,6 +355,80 @@ def get_centered_data(df_raw, dataset_name, band_name, leak_free):
     CENTERED_CACHE[cache_key] = centered_vals
     return centered_vals
 
+USE_CUML = None
+
+def check_cuml_available():
+    global USE_CUML
+    if USE_CUML is None:
+        try:
+            import torch
+            has_gpu = torch.cuda.is_available()
+        except ImportError:
+            has_gpu = False
+            
+        if has_gpu:
+            try:
+                import cuml
+                USE_CUML = True
+                print("[GPU] Acceleration active: RAPIDS cuML detected and CUDA GPU available!")
+            except ImportError:
+                USE_CUML = False
+                print("[INFO] CUDA GPU available, but RAPIDS cuML is not installed. Using CPU (scikit-learn).")
+        else:
+            USE_CUML = False
+            print("[INFO] CUDA GPU not detected. Using CPU (scikit-learn).")
+    return USE_CUML
+
+def fit_model(model_type, model_params, train_data):
+    use_gpu = check_cuml_available()
+    train_data_2d = train_data.reshape(-1, 1).astype(np.float32)
+    
+    if use_gpu:
+        try:
+            import cuml
+            if model_type == 'IsolationForest':
+                clf = cuml.ensemble.IsolationForest(
+                    n_estimators=model_params.get('n_estimators', 40),
+                    random_state=42
+                ).fit(train_data_2d)
+                return clf
+            elif model_type == 'OneClassSVM':
+                clf = cuml.svm.OneClassSVM(
+                    nu=model_params.get('nu', 0.05),
+                    kernel=model_params.get('kernel', 'rbf'),
+                    gamma=model_params.get('gamma', 'auto')
+                ).fit(train_data_2d)
+                return clf
+        except Exception as e:
+            print(f"[WARNING] GPU fitting failed ({e}). Falling back to CPU (scikit-learn).")
+
+    # Standard CPU Fallback (scikit-learn)
+    if model_type == 'IsolationForest':
+        from sklearn.ensemble import IsolationForest
+        return IsolationForest(
+            n_estimators=model_params.get('n_estimators', 40),
+            random_state=42,
+            n_jobs=-1
+        ).fit(train_data_2d)
+    elif model_type == 'OneClassSVM':
+        from sklearn.svm import OneClassSVM
+        return OneClassSVM(
+            nu=model_params.get('nu', 0.05),
+            kernel=model_params.get('kernel', 'rbf'),
+            gamma=model_params.get('gamma', 'auto')
+        ).fit(train_data_2d)
+    else:
+        raise ValueError(f"Unknown model type {model_type}")
+
+def predict_model(clf, test_data):
+    test_data_2d = test_data.reshape(-1, 1).astype(np.float32)
+    preds = clf.predict(test_data_2d)
+    if hasattr(preds, 'to_numpy'):
+        preds = preds.to_numpy()
+    elif hasattr(preds, 'get'):
+        preds = preds.get()
+    return np.asarray(preds)
+
 def run_experiment_pipeline(df_raw, centered_vals, alpha, beta, model_type, model_params, leak_free=True):
     # Enforce determinism
     random.seed(42)
@@ -407,28 +481,13 @@ def run_experiment_pipeline(df_raw, centered_vals, alpha, beta, model_type, mode
                     train_data = train_data[dataind]
                     
             # Fit classifier on regular data
-            if model_type == 'IsolationForest':
-                from sklearn.ensemble import IsolationForest
-                clf = IsolationForest(
-                    n_estimators=model_params.get('n_estimators', 40),
-                    random_state=42,
-                    n_jobs=-1
-                ).fit(train_data.reshape(-1, 1))
-            elif model_type == 'OneClassSVM':
-                from sklearn.svm import OneClassSVM
-                clf = OneClassSVM(
-                    nu=model_params.get('nu', 0.05),
-                    kernel=model_params.get('kernel', 'rbf'),
-                    gamma=model_params.get('gamma', 'auto')
-                ).fit(train_data.reshape(-1, 1))
-            else:
-                raise ValueError(f"Unknown model type {model_type}")
+            clf = fit_model(model_type, model_params, train_data)
                 
             # Predict anomalies for date j
             current_vals = centered_vals[:, j]
             valid_idx = ~np.isnan(current_vals)
             if np.sum(valid_idx) > 0:
-                pred = clf.predict(current_vals[valid_idx].reshape(-1, 1))
+                pred = predict_model(clf, current_vals[valid_idx])
                 df_pred.iloc[valid_idx, j] = pred
                 
     else:
@@ -450,20 +509,7 @@ def run_experiment_pipeline(df_raw, centered_vals, alpha, beta, model_type, mode
             train_data = train_data[dataind]
             
         print(f"  Fitting {model_type} on {len(train_data)} training samples...")
-        if model_type == 'IsolationForest':
-            from sklearn.ensemble import IsolationForest
-            clf = IsolationForest(
-                n_estimators=model_params.get('n_estimators', 40),
-                random_state=42,
-                n_jobs=-1
-            ).fit(train_data.reshape(-1, 1))
-        elif model_type == 'OneClassSVM':
-            from sklearn.svm import OneClassSVM
-            clf = OneClassSVM(
-                nu=model_params.get('nu', 0.05),
-                kernel=model_params.get('kernel', 'rbf'),
-                gamma=model_params.get('gamma', 'auto')
-            ).fit(train_data.reshape(-1, 1))
+        clf = fit_model(model_type, model_params, train_data)
             
         print(f"  Model fitted. Running predictions on {N_dates} dates...")
         # Predict on each column
@@ -473,7 +519,7 @@ def run_experiment_pipeline(df_raw, centered_vals, alpha, beta, model_type, mode
             current_vals = centered_vals[:, j]
             valid_idx = ~np.isnan(current_vals)
             if np.sum(valid_idx) > 0:
-                pred = clf.predict(current_vals[valid_idx].reshape(-1, 1))
+                pred = predict_model(clf, current_vals[valid_idx])
                 df_pred.iloc[valid_idx, j] = pred
                 
     t_end = time.time()
