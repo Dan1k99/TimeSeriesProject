@@ -532,6 +532,7 @@ def run_experiment_pipeline(df_raw, centered_vals, alpha, beta, model_type, mode
     return df_pred, df_metrics, exec_time
 
 def log_experiment_to_mlflow(dataset_name, band_name, alpha, beta, model_type, model_params, leak_free):
+    os.environ["MLFLOW_ALLOW_FILE_STORE"] = "true"
     if os.environ.get("MLFLOW_TRACKING_URI"):
         mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
     # Set experiment

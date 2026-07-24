@@ -37,6 +37,7 @@ def train_lstm_autoencoder(dataset_name='Altamira', num_epochs=10, batch_size=51
     
     # Setup MLflow
     import os
+    os.environ["MLFLOW_ALLOW_FILE_STORE"] = "true"
     if os.environ.get("MLFLOW_TRACKING_URI"):
         mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
     mlflow.set_experiment(f"DynaLand_{dataset_name}_DeepLearning")
